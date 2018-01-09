@@ -110,6 +110,7 @@ Code last_send_4;
 Code last_send_5;
 
 // PJR
+// Forward declarations to allow normal C++ compilation rather than (broken) Arduino !
 // Make this C++ not ".ino" - declare the functions before we use 'em
 void sendHomePage();
 void sendHomePage(String message, String header);
@@ -489,14 +490,15 @@ void setup() {
 
   Serial.println("");
   Serial.println("ESP8266 IR Controller");
-  Serial.println("PJR Version 8/1/18");
+  Serial.println("PJR Version 8/1/18 from github spock64/IRtool ...");
+  // config pin was set to 10 - this is problematic for NodeMCU ...
   //pinMode(configpin, INPUT_PULLUP);
-  Serial.print("Config pin GPIO");
-  Serial.print(configpin);
-  Serial.print(" set to: ");
-  Serial.println(digitalRead(configpin));
-  if (!setupWifi(digitalRead(configpin) == LOW))
-    return;
+  // Serial.print("Config pin GPIO");
+  // Serial.print(configpin);
+  // Serial.print(" set to: ");
+  // Serial.println(digitalRead(configpin));
+  // if (!setupWifi(digitalRead(configpin) == LOW))
+  //   return;
 
   Serial.println("WiFi configuration complete");
 

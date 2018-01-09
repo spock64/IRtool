@@ -1,0 +1,26 @@
+ToDo ...
+
+de-Amazon
+Which LED is turned off in "disableLed" ?
+Add DHCP
+Add OTA mode
+Should lost wifi result in esp reset? (lostWifiCallback)
+Should we reset when on portal too long ? (currently 3 minutes)
+Do we like the use of a JSON config file?
+Check config file keys - is there a version key?
+Should IP# be in the file etc. ?
+What is ticker used for in setupWifi?
+What is impact of wifi_set_sleep_type ?
+Should handlers for web server be defined "inline" - see json handler for example ?
+add LOG (512) option ?
+Should we support multiple blaster LEDs? How do we diable them?
+Should the HTML snippets be in files on the flash?
+Remove chubby-fingered if-if-if stuff with switch statements or use look-ups
+What is 200ms delay in loop() for?
+----
+
+*** PJR IDEAS ***
+How do we integrate with HomeKit?
+Add webpage to send / configure IR commands ...
+Simplify the API?
+Add call-outs on IR rxd?
