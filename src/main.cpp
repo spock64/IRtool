@@ -1,3 +1,6 @@
+// IRtool
+// (c) Copyright 2018 Jason Rogers
+
 // Github version ...
 
 #include <Arduino.h>
