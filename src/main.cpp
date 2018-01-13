@@ -35,16 +35,16 @@ const int timeOffset = -14400;                                // Timezone offset
 
 const bool enableMDNSServices = true;                         // Use mDNS services, must be enabled for ArduinoOTA
 
-int pinr1 = 14;                                               // Receiving pin
-int pins1 = 4;                                                // Transmitting preset 1
-int pins2 = 5;                                                // Transmitting preset 2
-int pins3 = 12;                                               // Transmitting preset 3
-int pins4 = 13;                                               // Transmitting preset 4
+int pinr1 = D5;//14;                                               // Receiving pin
+int pins1 = D3;//was D2 4;                                                // Transmitting preset 1
+int pins2 = D1;//5;                                                // Transmitting preset 2
+int pins3 = D6;//12;                                               // Transmitting preset 3
+int pins4 = D7;//13;                                               // Transmitting preset 4
 
 // User settings are above here
 
-const int configpin = 10;                                     // GPIO10
-const int ledpin = BUILTIN_LED;                               // Built in LED defined for WEMOS people
+const int configpin = D2;//10;                                     // GPIO10
+const int ledpin = D4;//BUILTIN_LED;                               // Built in LED defined for WEMOS people
 const char *wifi_config_name = "IR Controller Configuration";
 const char serverName[] = "checkip.dyndns.org";
 int port = 80;
@@ -53,6 +53,9 @@ char host_name[20] = "";
 char port_str[6] = "80";
 char user_id[60] = "";
 const char* fingerprint = "8D 83 C3 5F 0A 09 84 AE B0 64 39 23 8F 05 9E 4D 5E 08 60 06";
+
+// Change each time the format changes ...
+const char * CONFIG_FILE_VERSION = "0.1";
 
 char static_ip[16] = "10.0.1.10";
 char static_gw[16] = "10.0.1.1";
@@ -166,86 +169,86 @@ void resetReceive() {
 //+=============================================================================
 // Valid command request using HMAC
 //
-bool validateHMAC(String epid, String mid, String timestamp, String signature) {
-    userIDError = false;
-    authError = false;
-    timeAuthError = false;
-
-    if (!String(user_id).startsWith("amzn1.account.")) {
-      Serial.println("Warning, user_id appears to be in the wrong format, security check will most likely fail. Should start with amzn1.account.***");
-      userIDError = true;
-    }
-
-    time_t timethen = timestamp.toInt();
-    time_t timenow = timeClient.getEpochTime() - timeOffset;
-
-    if (abs(timethen - timenow) > 30) {
-      Serial.println("Failed security check, signature is too old");
-      Serial.print("Server: ");
-      Serial.println(timethen);
-      Serial.print("Local: ");
-      Serial.println(timenow);
-      Serial.print("MID: ");
-      Serial.println(mid);
-      timeAuthError = true;
-      if (timenow < 922838400)
-        Serial.println("Epoch time from timeServer is unexpectedly old, probably failed connection to the time server. Check your network settings");
-      return false;
-    }
-
-    uint8_t *hash;
-    String key = String(user_id);
-    Sha256.initHmac((uint8_t*)key.c_str(), key.length()); // key, and length of key in bytes
-    Sha256.print(epid);
-    Sha256.print(mid);
-    Sha256.print(timestamp);
-    hash = Sha256.resultHmac();
-    String computedSignature = bin2hex(hash, HASH_LENGTH);
-
-    if (computedSignature != signature) {
-      Serial.println("Failed security check, signatures do not match");
-      Serial.print("1: ");
-      Serial.println(signature);
-      Serial.print("2: ");
-      Serial.println(computedSignature);
-      Serial.print("MID: ");
-      Serial.println(mid);
-      authError = true;
-      return false;
-    }
-
-    Serial.println("Passed security check");
-    Serial.print("MID: ");
-    Serial.println(mid);
-    return true;
-}
-
-
-//+=============================================================================
-// Get User_ID from Amazon Token (memory intensive and causes crashing)
+// bool validateHMAC(String epid, String mid, String timestamp, String signature) {
+//     userIDError = false;
+//     authError = false;
+//     timeAuthError = false;
 //
-String getUserID(String token)
-{
-  http.setTimeout(5000);
-  String url = "https://api.amazon.com/user/profile?access_token=";
-  String uid = "";
-  http.begin(url + token, fingerprint);
-  int httpCode = http.GET();
-  String payload = http.getString();
-  Serial.println(url + token);
-  Serial.println(httpCode);
-  Serial.println(payload);
-  if (httpCode > 0 && httpCode == HTTP_CODE_OK) {
-    DynamicJsonBuffer jsonBuffer;
-    JsonObject& json = jsonBuffer.parseObject(payload);
-    uid = json["user_id"].as<String>();
-  } else {
-    Serial.println("Error retrieving user_id");
-    payload = "";
-  }
-  http.end();
-  return uid;
-}
+//     if (!String(user_id).startsWith("amzn1.account.")) {
+//       Serial.println("Warning, user_id appears to be in the wrong format, security check will most likely fail. Should start with amzn1.account.***");
+//       userIDError = true;
+//     }
+//
+//     time_t timethen = timestamp.toInt();
+//     time_t timenow = timeClient.getEpochTime() - timeOffset;
+//
+//     if (abs(timethen - timenow) > 30) {
+//       Serial.println("Failed security check, signature is too old");
+//       Serial.print("Server: ");
+//       Serial.println(timethen);
+//       Serial.print("Local: ");
+//       Serial.println(timenow);
+//       Serial.print("MID: ");
+//       Serial.println(mid);
+//       timeAuthError = true;
+//       if (timenow < 922838400)
+//         Serial.println("Epoch time from timeServer is unexpectedly old, probably failed connection to the time server. Check your network settings");
+//       return false;
+//     }
+//
+//     uint8_t *hash;
+//     String key = String(user_id);
+//     Sha256.initHmac((uint8_t*)key.c_str(), key.length()); // key, and length of key in bytes
+//     Sha256.print(epid);
+//     Sha256.print(mid);
+//     Sha256.print(timestamp);
+//     hash = Sha256.resultHmac();
+//     String computedSignature = bin2hex(hash, HASH_LENGTH);
+//
+//     if (computedSignature != signature) {
+//       Serial.println("Failed security check, signatures do not match");
+//       Serial.print("1: ");
+//       Serial.println(signature);
+//       Serial.print("2: ");
+//       Serial.println(computedSignature);
+//       Serial.print("MID: ");
+//       Serial.println(mid);
+//       authError = true;
+//       return false;
+//     }
+//
+//     Serial.println("Passed security check");
+//     Serial.print("MID: ");
+//     Serial.println(mid);
+//     return true;
+// }
+
+
+// //+=============================================================================
+// // Get User_ID from Amazon Token (memory intensive and causes crashing)
+// //
+// String getUserID(String token)
+// {
+//   http.setTimeout(5000);
+//   String url = "https://api.amazon.com/user/profile?access_token=";
+//   String uid = "";
+//   http.begin(url + token, fingerprint);
+//   int httpCode = http.GET();
+//   String payload = http.getString();
+//   Serial.println(url + token);
+//   Serial.println(httpCode);
+//   Serial.println(payload);
+//   if (httpCode > 0 && httpCode == HTTP_CODE_OK) {
+//     DynamicJsonBuffer jsonBuffer;
+//     JsonObject& json = jsonBuffer.parseObject(payload);
+//     uid = json["user_id"].as<String>();
+//   } else {
+//     Serial.println("Error retrieving user_id");
+//     payload = "";
+//   }
+//   http.end();
+//   return uid;
+// }
 
 
 //+=============================================================================
@@ -382,24 +385,46 @@ bool setupWifi(bool resetConf) {
         JsonObject& json = jsonBuffer.parseObject(buf.get());
         json.printTo(Serial);
         if (json.success()) {
-          Serial.println("\nparsed json");
 
-          if (json.containsKey("hostname")) strncpy(host_name, json["hostname"], 20);
-          if (json.containsKey("passcode")) strncpy(passcode, json["passcode"], 20);
-          if (json.containsKey("user_id")) strncpy(user_id, json["user_id"], 60);
-          if (json.containsKey("port_str")) {
-            strncpy(port_str, json["port_str"], 6);
-            port = atoi(json["port_str"]);
+          Serial.println("\njson parse complete");
+
+          // Check for version keys
+          if (json.containsKey("version"))
+            if(strcmp(json["version"], CONFIG_FILE_VERSION) == 0)
+            {
+              // File is OK
+              Serial.println("\nConfig file version matches - loading");
+
+              if (json.containsKey("hostname")) strncpy(host_name, json["hostname"], 20);
+              if (json.containsKey("passcode")) strncpy(passcode, json["passcode"], 20);
+              if (json.containsKey("user_id")) strncpy(user_id, json["user_id"], 60);
+              if (json.containsKey("port_str")) {
+                strncpy(port_str, json["port_str"], 6);
+                port = atoi(json["port_str"]);
+              }
+              if (json.containsKey("ip")) strncpy(static_ip, json["ip"], 16);
+              if (json.containsKey("gw")) strncpy(static_gw, json["gw"], 16);
+              if (json.containsKey("sn")) strncpy(static_sn, json["sn"], 16);
+
+            }
+            else
+            {
+              Serial.println("\nConfig file is wrong version\n");
+              //Serial.println(json["version"]);
+            }
+          else
+          {
+            // No version key ...
+            Serial.println("No version key found ...");
           }
-          if (json.containsKey("ip")) strncpy(static_ip, json["ip"], 16);
-          if (json.containsKey("gw")) strncpy(static_gw, json["gw"], 16);
-          if (json.containsKey("sn")) strncpy(static_sn, json["sn"], 16);
+
         } else {
           Serial.println("failed to load json config");
         }
       }
     }
   } else {
+    // Should do something with the LED?
     Serial.println("failed to mount FS");
   }
 
@@ -412,12 +437,13 @@ bool setupWifi(bool resetConf) {
   WiFiManagerParameter custom_userid("user_id", "Enter your Amazon user_id", user_id, 60);
   wifiManager.addParameter(&custom_userid);
 
-  IPAddress sip, sgw, ssn;
-  sip.fromString(static_ip);
-  sgw.fromString(static_gw);
-  ssn.fromString(static_sn);
-  Serial.println("Using Static IP");
-  wifiManager.setSTAStaticIPConfig(sip, sgw, ssn);
+  // We will always use DHCP ...
+  // IPAddress sip, sgw, ssn;
+  // sip.fromString(static_ip);
+  // sgw.fromString(static_gw);
+  // ssn.fromString(static_sn);
+  //Serial.println("Using Static IP");
+  //wifiManager.setSTAStaticIPConfig(sip, sgw, ssn);
 
   // fetches ssid and pass and tries to connect
   // if it does not connect it starts an access point with the specified name
@@ -458,6 +484,7 @@ bool setupWifi(bool resetConf) {
     json["ip"] = WiFi.localIP().toString();
     json["gw"] = WiFi.gatewayIP().toString();
     json["sn"] = WiFi.subnetMask().toString();
+    json["version"] = CONFIG_FILE_VERSION;
 
     File configFile = SPIFFS.open("/config.json", "w");
     if (!configFile) {
@@ -495,13 +522,17 @@ void setup() {
   Serial.println("ESP8266 IR Controller");
   Serial.println("PJR Version 8/1/18 from github spock64/IRtool ...");
   // config pin was set to 10 - this is problematic for NodeMCU ...
-  //pinMode(configpin, INPUT_PULLUP);
-  // Serial.print("Config pin GPIO");
-  // Serial.print(configpin);
-  // Serial.print(" set to: ");
-  // Serial.println(digitalRead(configpin));
-  // if (!setupWifi(digitalRead(configpin) == LOW))
-  //   return;
+  pinMode(configpin, INPUT_PULLUP);
+  Serial.print("Config pin GPIO");
+  Serial.print(configpin);
+  Serial.print(" set to: ");
+  Serial.println(digitalRead(configpin));
+
+  // Set up WiFi - and enter AP config mode if button held low ...
+  if (!setupWifi(digitalRead(configpin) == LOW))
+    return;
+
+  //setupWifi(0);
 
   Serial.println("WiFi configuration complete");
 
@@ -587,8 +618,8 @@ void setup() {
         sendHomePage("Invalid passcode", "Unauthorized", 3, 401); // 401
       }
       jsonBuffer.clear();
-    } else if (strlen(user_id) != 0 && !validateHMAC(epid, mid, timestamp, signature)) {
-      server->send(401, "text/plain", "Unauthorized, HMAC security authentication failed");
+    // } else if (strlen(user_id) != 0 && !validateHMAC(epid, mid, timestamp, signature)) {
+    //   server->send(401, "text/plain", "Unauthorized, HMAC security authentication failed");
     } else {
       digitalWrite(ledpin, LOW);
       ticker.attach(0.5, disableLed);
@@ -712,8 +743,8 @@ void setup() {
       } else {
         sendHomePage("Invalid passcode", "Unauthorized", 3, 401); // 401
       }
-    } else if (strlen(user_id) != 0 && !validateHMAC(epid, mid, timestamp, signature)) {
-      server->send(401, "text/plain", "Unauthorized, HMAC security authentication");
+    // } else if (strlen(user_id) != 0 && !validateHMAC(epid, mid, timestamp, signature)) {
+    //   server->send(401, "text/plain", "Unauthorized, HMAC security authentication");
     } else {
       digitalWrite(ledpin, LOW);
       ticker.attach(0.5, disableLed);
@@ -812,7 +843,7 @@ void setup() {
   server->begin();
   Serial.println("HTTP Server started on port " + String(port));
 
-  externalIP();
+  //externalIP();
 
   irsend1.begin();
   irsend2.begin();
