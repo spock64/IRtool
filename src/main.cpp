@@ -33,7 +33,7 @@ const bool getExternalIP = false; // PJR - remove this...     // Set to false to
 const bool getTime = true;                                    // Set to false to disable querying for the time
 // PJR - better timezone support ?
 // What about BST?
-const int timeOffset = -14400;                                // Timezone offset in seconds
+const int timeOffset = 0;                                // Timezone offset in seconds
 
 // PJR - why would this be configurable?
 const bool enableMDNSServices = true;                         // Use mDNS services, must be enabled for ArduinoOTA
@@ -82,7 +82,7 @@ IRsend irsend3(pins3);
 IRsend irsend4(pins4);
 
 const unsigned long resetfrequency = 259200000;                // 72 hours in milliseconds
-const char* poolServerName = "time.nist.gov";
+const char* poolServerName = "192.168.16.1"; //pfsense
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, poolServerName, timeOffset, 1800000);
@@ -344,6 +344,8 @@ void configModeCallback (WiFiManager *myWiFiManager) {
 void lostWifiCallback (const WiFiEventStationModeDisconnected& evt) {
   Serial.println("Lost Wifi");
   // reset and try again, or maybe put it to deep sleep
+
+  // PJR - should be better way than this?
   ESP.reset();
   delay(1000);
 }
@@ -352,7 +354,7 @@ void lostWifiCallback (const WiFiEventStationModeDisconnected& evt) {
 //+=============================================================================
 // First setup of the Wifi.
 // If return true, the Wifi is well connected.
-// Should not return false if Wifi cannot be connected, it will loop
+// Should not return false if Wifi cannot be connected, it will loop    PJR - wtf?
 //
 bool setupWifi(bool resetConf) {
   // start ticker with 0.5 because we start in AP mode and try to connect
@@ -439,8 +441,8 @@ bool setupWifi(bool resetConf) {
   wifiManager.addParameter(&custom_passcode);
   WiFiManagerParameter custom_port("port_str", "Choose a port", port_str, 6);
   wifiManager.addParameter(&custom_port);
-  WiFiManagerParameter custom_userid("user_id", "Enter your Amazon user_id", user_id, 60);
-  wifiManager.addParameter(&custom_userid);
+  // WiFiManagerParameter custom_userid("user_id", "Enter your Amazon user_id", user_id, 60);
+  // wifiManager.addParameter(&custom_userid);
 
   // We will always use DHCP ...
   // IPAddress sip, sgw, ssn;
@@ -464,9 +466,11 @@ bool setupWifi(bool resetConf) {
   strncpy(host_name, custom_hostname.getValue(), 20);
   strncpy(passcode, custom_passcode.getValue(), 20);
   strncpy(port_str, custom_port.getValue(), 6);
-  strncpy(user_id, custom_userid.getValue(), 60);
+  // strncpy(user_id, custom_userid.getValue(), 60);         // PJR - Remove ?
+  strncpy(user_id,"**PJR NO UID***",60);                      // ditto
   port = atoi(port_str);
 
+// ???
   if (server != NULL) {
     delete server;
   }
