@@ -256,7 +256,7 @@ void resetReceive() {
 //
 void tick()
 {
-  int state = digitalRead(ledpin);  // get the current state of GPIO1 pin
+  int state = digitalRead(ledpin);  // get the current state of BUILTIN_LED pin
   digitalWrite(ledpin, !state);     // set pin to the opposite state
 }
 
@@ -519,7 +519,7 @@ void setup() {
   pinMode(ledpin, OUTPUT);
 
   Serial.println("");
-  Serial.println("ESP8266 IR Controller");
+  Serial.println("ESP8266 IR Controller with OTA updates");
   Serial.println("PJR Version 8/1/18 from github spock64/IRtool ...");
   // config pin was set to 10 - this is problematic for NodeMCU ...
   pinMode(configpin, INPUT_PULLUP);
@@ -558,21 +558,29 @@ void setup() {
 
   if (getTime || strlen(user_id) != 0) timeClient.begin(); // Get the time
 
+
+
+  // This sets up OTA via - ArduinoOTA
+  // Horrid inline functions ...
   if (enableMDNSServices) {
     // Configure OTA Update
-    ArduinoOTA.setPort(8266);
+    ArduinoOTA.setPort(8266);                   // noise
     ArduinoOTA.setHostname(host_name);
     ArduinoOTA.onStart([]() {
       Serial.println("Start");
+      // Should (if we could) flicker the led ?
+      ticker.attach(0.25, tick);
     });
     ArduinoOTA.onEnd([]() {
       Serial.println("\nEnd");
+      ticker.detach();
     });
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
       Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
     });
     ArduinoOTA.onError([](ota_error_t error) {
       Serial.printf("Error[%u]: ", error);
+      // This should be indicated by the LED ..
       if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
       else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
       else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
