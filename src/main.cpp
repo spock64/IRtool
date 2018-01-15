@@ -28,13 +28,17 @@
 
 // User settings are below here
 
-const bool getExternalIP = true;                              // Set to false to disable querying external IP
+const bool getExternalIP = false; // PJR - remove this...     // Set to false to disable querying external IP
 
 const bool getTime = true;                                    // Set to false to disable querying for the time
-const int timeOffset = -14400;                                // Timezone offset in seconds
+// PJR - better timezone support ?
+// What about BST?
+const int timeOffset = 0;                                // Timezone offset in seconds
 
+// PJR - why would this be configurable?
 const bool enableMDNSServices = true;                         // Use mDNS services, must be enabled for ArduinoOTA
 
+// PJR - configure using Dn rather than GPIO number (sign of supidity from hardware types)
 int pinr1 = D5;//14;                                               // Receiving pin
 int pins1 = D3;//was D2 4;                                                // Transmitting preset 1
 int pins2 = D1;//5;                                                // Transmitting preset 2
@@ -43,23 +47,23 @@ int pins4 = D7;//13;                                               // Transmitti
 
 // User settings are above here
 
-const int configpin = D2;//10;                                     // GPIO10
+const int configpin = D2;//10;                                     // GPIO10 can't be used on NodeMCU !
 const int ledpin = D4;//BUILTIN_LED;                               // Built in LED defined for WEMOS people
-const char *wifi_config_name = "IR Controller Configuration";
-const char serverName[] = "checkip.dyndns.org";
+const char *wifi_config_name = "IR Controller Configuration"; // Should be Name and number ...
+// const char serverName[] = "checkip.dyndns.org"; // PJR - what is this about ?
 int port = 80;
 char passcode[20] = "";
 char host_name[20] = "";
 char port_str[6] = "80";
 char user_id[60] = "";
-const char* fingerprint = "8D 83 C3 5F 0A 09 84 AE B0 64 39 23 8F 05 9E 4D 5E 08 60 06";
+// const char* fingerprint = "8D 83 C3 5F 0A 09 84 AE B0 64 39 23 8F 05 9E 4D 5E 08 60 06";
 
 // Change each time the format changes ...
-const char * CONFIG_FILE_VERSION = "0.1";
+const char * CONFIG_FILE_VERSION = "0.1a";
 
-char static_ip[16] = "10.0.1.10";
-char static_gw[16] = "10.0.1.1";
-char static_sn[16] = "255.255.255.0";
+// char static_ip[16] = "10.0.1.10";
+// char static_gw[16] = "10.0.1.1";
+// char static_sn[16] = "255.255.255.0";
 
 DynamicJsonBuffer jsonBuffer;
 JsonObject& deviceState = jsonBuffer.createObject();
@@ -78,7 +82,7 @@ IRsend irsend3(pins3);
 IRsend irsend4(pins4);
 
 const unsigned long resetfrequency = 259200000;                // 72 hours in milliseconds
-const char* poolServerName = "time.nist.gov";
+const char* poolServerName = "192.168.16.1"; //pfsense
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, poolServerName, timeOffset, 1800000);
@@ -266,46 +270,47 @@ void tick()
 //
 String externalIP()
 {
-  if (!getExternalIP) {
+  // if (!getExternalIP) {
+  // PJR - we don't need this ...
     return "0.0.0.0"; // User doesn't want the external IP
-  }
-
-  if (strlen(_ip) > 0) {
-    if (millis() - lastupdate > resetfrequency || lastupdate > millis()) {
-      Serial.println("Reseting cached external IP address");
-      strncpy(_ip, "", 16); // Reset the cached external IP every 72 hours
-    } else {
-      return String(_ip); // Return the cached external IP
-    }
-  }
-
-  externalIPError = false;
-  unsigned long start = millis();
-  http.setTimeout(10000);
-  http.begin(serverName, 8245);
-  int httpCode = http.GET();
-
-  if (httpCode > 0 && httpCode == HTTP_CODE_OK) {
-    String payload = http.getString();
-    int pos_start = payload.indexOf("IP Address") + 12; // add 10 for "IP Address" and 2 for ":" + "space"
-    int pos_end = payload.indexOf("</body>", pos_start); // add nothing
-    strncpy(_ip, payload.substring(pos_start, pos_end).c_str(), 16);
-    Serial.print(F("External IP: "));
-    Serial.println(_ip);
-    lastupdate = millis();
-  } else {
-    Serial.println("Error retrieving external IP");
-    Serial.print("HTTP Code: ");
-    Serial.println(httpCode);
-    externalIPError = true;
-  }
-
-  http.end();
-  Serial.print("External IP address request took ");
-  Serial.print(millis() - start);
-  Serial.println(" ms");
-
-  return _ip;
+  // }
+  //
+  // if (strlen(_ip) > 0) {
+  //   if (millis() - lastupdate > resetfrequency || lastupdate > millis()) {
+  //     Serial.println("Reseting cached external IP address");
+  //     strncpy(_ip, "", 16); // Reset the cached external IP every 72 hours
+  //   } else {
+  //     return String(_ip); // Return the cached external IP
+  //   }
+  // }
+  //
+  // externalIPError = false;
+  // unsigned long start = millis();
+  // http.setTimeout(10000);
+  // http.begin(serverName, 8245);
+  // int httpCode = http.GET();
+  //
+  // if (httpCode > 0 && httpCode == HTTP_CODE_OK) {
+  //   String payload = http.getString();
+  //   int pos_start = payload.indexOf("IP Address") + 12; // add 10 for "IP Address" and 2 for ":" + "space"
+  //   int pos_end = payload.indexOf("</body>", pos_start); // add nothing
+  //   strncpy(_ip, payload.substring(pos_start, pos_end).c_str(), 16);
+  //   Serial.print(F("External IP: "));
+  //   Serial.println(_ip);
+  //   lastupdate = millis();
+  // } else {
+  //   Serial.println("Error retrieving external IP");
+  //   Serial.print("HTTP Code: ");
+  //   Serial.println(httpCode);
+  //   externalIPError = true;
+  // }
+  //
+  // http.end();
+  // Serial.print("External IP address request took ");
+  // Serial.print(millis() - start);
+  // Serial.println(" ms");
+  //
+  // return _ip;
 }
 
 
@@ -339,6 +344,8 @@ void configModeCallback (WiFiManager *myWiFiManager) {
 void lostWifiCallback (const WiFiEventStationModeDisconnected& evt) {
   Serial.println("Lost Wifi");
   // reset and try again, or maybe put it to deep sleep
+
+  // PJR - should be better way than this?
   ESP.reset();
   delay(1000);
 }
@@ -347,7 +354,7 @@ void lostWifiCallback (const WiFiEventStationModeDisconnected& evt) {
 //+=============================================================================
 // First setup of the Wifi.
 // If return true, the Wifi is well connected.
-// Should not return false if Wifi cannot be connected, it will loop
+// Should not return false if Wifi cannot be connected, it will loop    PJR - wtf?
 //
 bool setupWifi(bool resetConf) {
   // start ticker with 0.5 because we start in AP mode and try to connect
@@ -402,9 +409,9 @@ bool setupWifi(bool resetConf) {
                 strncpy(port_str, json["port_str"], 6);
                 port = atoi(json["port_str"]);
               }
-              if (json.containsKey("ip")) strncpy(static_ip, json["ip"], 16);
-              if (json.containsKey("gw")) strncpy(static_gw, json["gw"], 16);
-              if (json.containsKey("sn")) strncpy(static_sn, json["sn"], 16);
+              // if (json.containsKey("ip")) strncpy(static_ip, json["ip"], 16);
+              // if (json.containsKey("gw")) strncpy(static_gw, json["gw"], 16);
+              // if (json.containsKey("sn")) strncpy(static_sn, json["sn"], 16);
 
             }
             else
@@ -434,8 +441,8 @@ bool setupWifi(bool resetConf) {
   wifiManager.addParameter(&custom_passcode);
   WiFiManagerParameter custom_port("port_str", "Choose a port", port_str, 6);
   wifiManager.addParameter(&custom_port);
-  WiFiManagerParameter custom_userid("user_id", "Enter your Amazon user_id", user_id, 60);
-  wifiManager.addParameter(&custom_userid);
+  // WiFiManagerParameter custom_userid("user_id", "Enter your Amazon user_id", user_id, 60);
+  // wifiManager.addParameter(&custom_userid);
 
   // We will always use DHCP ...
   // IPAddress sip, sgw, ssn;
@@ -459,9 +466,11 @@ bool setupWifi(bool resetConf) {
   strncpy(host_name, custom_hostname.getValue(), 20);
   strncpy(passcode, custom_passcode.getValue(), 20);
   strncpy(port_str, custom_port.getValue(), 6);
-  strncpy(user_id, custom_userid.getValue(), 60);
+  // strncpy(user_id, custom_userid.getValue(), 60);         // PJR - Remove ?
+  strncpy(user_id,"**PJR NO UID***",60);                      // ditto
   port = atoi(port_str);
 
+// ???
   if (server != NULL) {
     delete server;
   }
