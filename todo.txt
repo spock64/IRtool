@@ -8,7 +8,7 @@ Should lost wifi result in esp reset? (lostWifiCallback)
 Should we reset when on portal too long ? (currently 3 minutes)
 Do we like the use of a JSON config file? YES WE DO :-)
 Check config file keys - is there a version key? - VERSION NOW ADDED
-Should IP# be in the file etc. ? NOPE
+Should IP# be in the file etc. ? NOPE - REMOVED
 What is ticker used for in setupWifi? TO FLASH THE LED (Which we like)
 What is impact of wifi_set_sleep_type ?
 Should handlers for web server be defined "inline" - see json handler for example ?
@@ -17,6 +17,7 @@ Should we support multiple blaster LEDs? How do we disable them?
 Should the HTML snippets be in files on the flash?
 Remove chubby-fingered if-if-if stuff with switch statements or use look-ups?
 What is 200ms delay in loop() for?
+Remove externalIP stuff - DONE
 ----
 
 *** PJR IDEAS ***
@@ -26,3 +27,4 @@ Simplify the API?
 Add call-outs on IR rxd?
 Configurable time server ...
 Reset on losing WiFi - needs to be better
+Allow no passcode

@@ -28,8 +28,6 @@
 
 // User settings are below here
 
-const bool getExternalIP = false; // PJR - remove this...     // Set to false to disable querying external IP
-
 const bool getTime = true;                                    // Set to false to disable querying for the time
 // PJR - better timezone support ?
 // What about BST?
@@ -49,21 +47,15 @@ int pins4 = D7;//13;                                               // Transmitti
 
 const int configpin = D2;//10;                                     // GPIO10 can't be used on NodeMCU !
 const int ledpin = D4;//BUILTIN_LED;                               // Built in LED defined for WEMOS people
-const char *wifi_config_name = "IR Controller Configuration"; // Should be Name and number ...
-// const char serverName[] = "checkip.dyndns.org"; // PJR - what is this about ?
+const char *wifi_config_name = "RemoteIR"; // Should be Name and number ...
 int port = 80;
 char passcode[20] = "";
 char host_name[20] = "";
 char port_str[6] = "80";
 char user_id[60] = "";
-// const char* fingerprint = "8D 83 C3 5F 0A 09 84 AE B0 64 39 23 8F 05 9E 4D 5E 08 60 06";
 
 // Change each time the format changes ...
 const char * CONFIG_FILE_VERSION = "0.1a";
-
-// char static_ip[16] = "10.0.1.10";
-// char static_gw[16] = "10.0.1.1";
-// char static_sn[16] = "255.255.255.0";
 
 DynamicJsonBuffer jsonBuffer;
 JsonObject& deviceState = jsonBuffer.createObject();
@@ -169,92 +161,6 @@ void resetReceive() {
   }
 }
 
-
-//+=============================================================================
-// Valid command request using HMAC
-//
-// bool validateHMAC(String epid, String mid, String timestamp, String signature) {
-//     userIDError = false;
-//     authError = false;
-//     timeAuthError = false;
-//
-//     if (!String(user_id).startsWith("amzn1.account.")) {
-//       Serial.println("Warning, user_id appears to be in the wrong format, security check will most likely fail. Should start with amzn1.account.***");
-//       userIDError = true;
-//     }
-//
-//     time_t timethen = timestamp.toInt();
-//     time_t timenow = timeClient.getEpochTime() - timeOffset;
-//
-//     if (abs(timethen - timenow) > 30) {
-//       Serial.println("Failed security check, signature is too old");
-//       Serial.print("Server: ");
-//       Serial.println(timethen);
-//       Serial.print("Local: ");
-//       Serial.println(timenow);
-//       Serial.print("MID: ");
-//       Serial.println(mid);
-//       timeAuthError = true;
-//       if (timenow < 922838400)
-//         Serial.println("Epoch time from timeServer is unexpectedly old, probably failed connection to the time server. Check your network settings");
-//       return false;
-//     }
-//
-//     uint8_t *hash;
-//     String key = String(user_id);
-//     Sha256.initHmac((uint8_t*)key.c_str(), key.length()); // key, and length of key in bytes
-//     Sha256.print(epid);
-//     Sha256.print(mid);
-//     Sha256.print(timestamp);
-//     hash = Sha256.resultHmac();
-//     String computedSignature = bin2hex(hash, HASH_LENGTH);
-//
-//     if (computedSignature != signature) {
-//       Serial.println("Failed security check, signatures do not match");
-//       Serial.print("1: ");
-//       Serial.println(signature);
-//       Serial.print("2: ");
-//       Serial.println(computedSignature);
-//       Serial.print("MID: ");
-//       Serial.println(mid);
-//       authError = true;
-//       return false;
-//     }
-//
-//     Serial.println("Passed security check");
-//     Serial.print("MID: ");
-//     Serial.println(mid);
-//     return true;
-// }
-
-
-// //+=============================================================================
-// // Get User_ID from Amazon Token (memory intensive and causes crashing)
-// //
-// String getUserID(String token)
-// {
-//   http.setTimeout(5000);
-//   String url = "https://api.amazon.com/user/profile?access_token=";
-//   String uid = "";
-//   http.begin(url + token, fingerprint);
-//   int httpCode = http.GET();
-//   String payload = http.getString();
-//   Serial.println(url + token);
-//   Serial.println(httpCode);
-//   Serial.println(payload);
-//   if (httpCode > 0 && httpCode == HTTP_CODE_OK) {
-//     DynamicJsonBuffer jsonBuffer;
-//     JsonObject& json = jsonBuffer.parseObject(payload);
-//     uid = json["user_id"].as<String>();
-//   } else {
-//     Serial.println("Error retrieving user_id");
-//     payload = "";
-//   }
-//   http.end();
-//   return uid;
-// }
-
-
 //+=============================================================================
 // Toggle state
 //
@@ -268,51 +174,12 @@ void tick()
 //+=============================================================================
 // Get External IP Address
 //
-String externalIP()
-{
-  // if (!getExternalIP) {
-  // PJR - we don't need this ...
-    return "0.0.0.0"; // User doesn't want the external IP
-  // }
-  //
-  // if (strlen(_ip) > 0) {
-  //   if (millis() - lastupdate > resetfrequency || lastupdate > millis()) {
-  //     Serial.println("Reseting cached external IP address");
-  //     strncpy(_ip, "", 16); // Reset the cached external IP every 72 hours
-  //   } else {
-  //     return String(_ip); // Return the cached external IP
-  //   }
-  // }
-  //
-  // externalIPError = false;
-  // unsigned long start = millis();
-  // http.setTimeout(10000);
-  // http.begin(serverName, 8245);
-  // int httpCode = http.GET();
-  //
-  // if (httpCode > 0 && httpCode == HTTP_CODE_OK) {
-  //   String payload = http.getString();
-  //   int pos_start = payload.indexOf("IP Address") + 12; // add 10 for "IP Address" and 2 for ":" + "space"
-  //   int pos_end = payload.indexOf("</body>", pos_start); // add nothing
-  //   strncpy(_ip, payload.substring(pos_start, pos_end).c_str(), 16);
-  //   Serial.print(F("External IP: "));
-  //   Serial.println(_ip);
-  //   lastupdate = millis();
-  // } else {
-  //   Serial.println("Error retrieving external IP");
-  //   Serial.print("HTTP Code: ");
-  //   Serial.println(httpCode);
-  //   externalIPError = true;
-  // }
-  //
-  // http.end();
-  // Serial.print("External IP address request took ");
-  // Serial.print(millis() - start);
-  // Serial.println(" ms");
-  //
-  // return _ip;
-}
-
+// String externalIP()
+// {
+//   // PJR - we don't need this ...
+//     return "0.0.0.0"; // User doesn't want the external IP
+// }
+//
 
 //+=============================================================================
 // Turn off the Led after timeout
@@ -409,10 +276,6 @@ bool setupWifi(bool resetConf) {
                 strncpy(port_str, json["port_str"], 6);
                 port = atoi(json["port_str"]);
               }
-              // if (json.containsKey("ip")) strncpy(static_ip, json["ip"], 16);
-              // if (json.containsKey("gw")) strncpy(static_gw, json["gw"], 16);
-              // if (json.containsKey("sn")) strncpy(static_sn, json["sn"], 16);
-
             }
             else
             {
@@ -441,16 +304,6 @@ bool setupWifi(bool resetConf) {
   wifiManager.addParameter(&custom_passcode);
   WiFiManagerParameter custom_port("port_str", "Choose a port", port_str, 6);
   wifiManager.addParameter(&custom_port);
-  // WiFiManagerParameter custom_userid("user_id", "Enter your Amazon user_id", user_id, 60);
-  // wifiManager.addParameter(&custom_userid);
-
-  // We will always use DHCP ...
-  // IPAddress sip, sgw, ssn;
-  // sip.fromString(static_ip);
-  // sgw.fromString(static_gw);
-  // ssn.fromString(static_sn);
-  //Serial.println("Using Static IP");
-  //wifiManager.setSTAStaticIPConfig(sip, sgw, ssn);
 
   // fetches ssid and pass and tries to connect
   // if it does not connect it starts an access point with the specified name
@@ -466,8 +319,7 @@ bool setupWifi(bool resetConf) {
   strncpy(host_name, custom_hostname.getValue(), 20);
   strncpy(passcode, custom_passcode.getValue(), 20);
   strncpy(port_str, custom_port.getValue(), 6);
-  // strncpy(user_id, custom_userid.getValue(), 60);         // PJR - Remove ?
-  strncpy(user_id,"**PJR NO UID***",60);                      // ditto
+  strncpy(user_id,"**PJR NO UID***",60);                      // PJR Remove when HTML sorted ...
   port = atoi(port_str);
 
 // ???
@@ -635,8 +487,6 @@ void setup() {
         sendHomePage("Invalid passcode", "Unauthorized", 3, 401); // 401
       }
       jsonBuffer.clear();
-    // } else if (strlen(user_id) != 0 && !validateHMAC(epid, mid, timestamp, signature)) {
-    //   server->send(401, "text/plain", "Unauthorized, HMAC security authentication failed");
     } else {
       digitalWrite(ledpin, LOW);
       ticker.attach(0.5, disableLed);
@@ -760,8 +610,6 @@ void setup() {
       } else {
         sendHomePage("Invalid passcode", "Unauthorized", 3, 401); // 401
       }
-    // } else if (strlen(user_id) != 0 && !validateHMAC(epid, mid, timestamp, signature)) {
-    //   server->send(401, "text/plain", "Unauthorized, HMAC security authentication");
     } else {
       digitalWrite(ledpin, LOW);
       ticker.attach(0.5, disableLed);
@@ -1022,7 +870,7 @@ void sendHeader(int httpcode) {
   server->sendContent("  </head>\n");
   server->sendContent("  <body>\n");
   server->sendContent("    <div class='container'>\n");
-  server->sendContent("      <h1><a href='https://github.com/mdhiggins/ESP8266-HTTP-IR-Blaster'>ESP8266 IR Controller</a></h1>\n");
+  server->sendContent("      <h1><a href='https://github.com/spock64/IRtool'>IRtool</a></h1>\n");
   server->sendContent("      <div class='row'>\n");
   server->sendContent("        <div class='col-md-12'>\n");
   server->sendContent("          <ul class='nav nav-pills'>\n");
@@ -1030,8 +878,8 @@ void sendHeader(int httpcode) {
   server->sendContent("              <a href='http://" + String(host_name) + ".local" + ":" + String(port) + "'>Hostname <span class='badge'>" + String(host_name) + ".local" + ":" + String(port) + "</span></a></li>\n");
   server->sendContent("            <li class='active'>\n");
   server->sendContent("              <a href='http://" + WiFi.localIP().toString() + ":" + String(port) + "'>Local <span class='badge'>" + WiFi.localIP().toString() + ":" + String(port) + "</span></a></li>\n");
-  server->sendContent("            <li class='active'>\n");
-  server->sendContent("              <a href='http://" + externalIP() + ":" + String(port) + "'>External <span class='badge'>" + externalIP() + ":" + String(port) + "</span></a></li>\n");
+//  server->sendContent("            <li class='active'>\n");
+//  server->sendContent("              <a href='http://" + externalIP() + ":" + String(port) + "'>External <span class='badge'>" + externalIP() + ":" + String(port) + "</span></a></li>\n");
   server->sendContent("            <li class='active'>\n");
   server->sendContent("              <a href='#'>MAC <span class='badge'>" + String(WiFi.macAddress()) + "</span></a></li>\n");
   server->sendContent("          </ul>\n");
@@ -1044,16 +892,16 @@ void sendHeader(int httpcode) {
 //
 void sendFooter() {
   server->sendContent("      <div class='row'><div class='col-md-12'><em>" + String(millis()) + "ms uptime</em></div></div>\n");
-  if (strlen(user_id) != 0)
-  server->sendContent("      <div class='row'><div class='col-md-12'><em>Device secured with SHA256 authentication. Only commands sent and verified with Amazon Alexa and the IR Controller Skill will be processed</em></div></div>");
-  if (authError)
-  server->sendContent("      <div class='row'><div class='col-md-12'><em>Error - last authentication failed because HMAC signatures did not match, see serial output for debugging details</em></div></div>");
-  if (timeAuthError)
-  server->sendContent("      <div class='row'><div class='col-md-12'><em>Error - last authentication failed because your timestamps are out of sync, see serial output for debugging details</em></div></div>");
-  if (externalIPError)
-  server->sendContent("      <div class='row'><div class='col-md-12'><em>Error - unable to retrieve external IP address, this is likely due to improper network settings</em></div></div>");
-  if (userIDError)
-  server->sendContent("      <div class='row'><div class='col-md-12'><em>Error - your userID is in the wrong format and authentication will not work</em></div></div>");
+  // if (strlen(user_id) != 0)
+  // server->sendContent("      <div class='row'><div class='col-md-12'><em>Device secured with SHA256 authentication. Only commands sent and verified with Amazon Alexa and the IR Controller Skill will be processed</em></div></div>");
+  // if (authError)
+  // server->sendContent("      <div class='row'><div class='col-md-12'><em>Error - last authentication failed because HMAC signatures did not match, see serial output for debugging details</em></div></div>");
+  // if (timeAuthError)
+  // server->sendContent("      <div class='row'><div class='col-md-12'><em>Error - last authentication failed because your timestamps are out of sync, see serial output for debugging details</em></div></div>");
+  // if (externalIPError)
+  // server->sendContent("      <div class='row'><div class='col-md-12'><em>Error - unable to retrieve external IP address, this is likely due to improper network settings</em></div></div>");
+  // if (userIDError)
+  // server->sendContent("      <div class='row'><div class='col-md-12'><em>Error - your userID is in the wrong format and authentication will not work</em></div></div>");
   server->sendContent("    </div>\n");
   server->sendContent("  </body>\n");
   server->sendContent("</html>\n");
@@ -1176,8 +1024,8 @@ void sendCodePage(Code selCode, int httpcode){
   server->sendContent("            <li><pre>http://" + String(host_name) + ".local:" + String(port) + "/json?plain=[{'data':[" + String(selCode.raw) + "],'type':'raw','khz':38}]</pre></li>\n");
   server->sendContent("            <li>Local IP <span class='label label-default'>JSON</span></li>\n");
   server->sendContent("            <li><pre>http://" + WiFi.localIP().toString() + ":" + String(port) + "/json?plain=[{'data':[" + String(selCode.raw) + "],'type':'raw','khz':38}]</pre></li>\n");
-  server->sendContent("            <li>External IP <span class='label label-default'>JSON</span></li>\n");
-  server->sendContent("            <li><pre>http://" + externalIP() + ":" + String(port) + "/json?plain=[{'data':[" + String(selCode.raw) + "],'type':'raw','khz':38}]</pre></li></ul>\n");
+  // server->sendContent("            <li>External IP <span class='label label-default'>JSON</span></li>\n");
+  // server->sendContent("            <li><pre>http://" + externalIP() + ":" + String(port) + "/json?plain=[{'data':[" + String(selCode.raw) + "],'type':'raw','khz':38}]</pre></li></ul>\n");
   } else if (String(selCode.encoding) == "PANASONIC") {
   //} else if (strtoul(selCode.address, 0, 0) > 0) {
   server->sendContent("      <div class='row'>\n");
@@ -1187,15 +1035,15 @@ void sendCodePage(Code selCode, int httpcode){
   server->sendContent("            <li><pre>http://" + String(host_name) + ".local:" + String(port) + "/msg?code=" + String(selCode.data) + ":" + String(selCode.encoding) + ":" + String(selCode.bits) + "&address=" + String(selCode.address) + "</pre></li>\n");
   server->sendContent("            <li>Local IP <span class='label label-default'>MSG</span></li>\n");
   server->sendContent("            <li><pre>http://" + WiFi.localIP().toString() + ":" + String(port) + "/msg?code=" + String(selCode.data) + ":" + String(selCode.encoding) + ":" + String(selCode.bits) + "&address=" + String(selCode.address) + "</pre></li>\n");
-  server->sendContent("            <li>External IP <span class='label label-default'>MSG</span></li>\n");
-  server->sendContent("            <li><pre>http://" + externalIP() + ":" + String(port) + "/msg?code=" + selCode.data + ":" + String(selCode.encoding) + ":" + String(selCode.bits) + "&address=" + String(selCode.address) + "</pre></li></ul>\n");
+  // server->sendContent("            <li>External IP <span class='label label-default'>MSG</span></li>\n");
+  // server->sendContent("            <li><pre>http://" + externalIP() + ":" + String(port) + "/msg?code=" + selCode.data + ":" + String(selCode.encoding) + ":" + String(selCode.bits) + "&address=" + String(selCode.address) + "</pre></li></ul>\n");
   server->sendContent("          <ul class='list-unstyled'>\n");
   server->sendContent("            <li>Hostname <span class='label label-default'>JSON</span></li>\n");
   server->sendContent("            <li><pre>http://" + String(host_name) + ".local:" + String(port) + "/json?plain=[{'data':'" + String(selCode.data) + "','type':'" + String(selCode.encoding) + "','length':" + String(selCode.bits) + ",'address':'" + String(selCode.address) + "'}]</pre></li>\n");
   server->sendContent("            <li>Local IP <span class='label label-default'>JSON</span></li>\n");
   server->sendContent("            <li><pre>http://" + WiFi.localIP().toString() + ":" + String(port) + "/json?plain=[{'data':'" + String(selCode.data) + "','type':'" + String(selCode.encoding) + "','length':" + String(selCode.bits) + ",'address':'" + String(selCode.address) + "'}]</pre></li>\n");
-  server->sendContent("            <li>External IP <span class='label label-default'>JSON</span></li>\n");
-  server->sendContent("            <li><pre>http://" + externalIP() + ":" + String(port) + "/json?plain=[{'data':'" + String(selCode.data) + "','type':'" + String(selCode.encoding) + "','length':" + String(selCode.bits) + ",'address':'" + String(selCode.address) + "'}]</pre></li></ul>\n");
+  // server->sendContent("            <li>External IP <span class='label label-default'>JSON</span></li>\n");
+  // server->sendContent("            <li><pre>http://" + externalIP() + ":" + String(port) + "/json?plain=[{'data':'" + String(selCode.data) + "','type':'" + String(selCode.encoding) + "','length':" + String(selCode.bits) + ",'address':'" + String(selCode.address) + "'}]</pre></li></ul>\n");
   } else {
   server->sendContent("      <div class='row'>\n");
   server->sendContent("        <div class='col-md-12'>\n");
@@ -1204,15 +1052,15 @@ void sendCodePage(Code selCode, int httpcode){
   server->sendContent("            <li><pre>http://" + String(host_name) + ".local:" + String(port) + "/msg?code=" + String(selCode.data) + ":" + String(selCode.encoding) + ":" + String(selCode.bits) + "</pre></li>\n");
   server->sendContent("            <li>Local IP <span class='label label-default'>MSG</span></li>\n");
   server->sendContent("            <li><pre>http://" + WiFi.localIP().toString() + ":" + String(port) + "/msg?code=" + String(selCode.data) + ":" + String(selCode.encoding) + ":" + String(selCode.bits) + "</pre></li>\n");
-  server->sendContent("            <li>External IP <span class='label label-default'>MSG</span></li>\n");
-  server->sendContent("            <li><pre>http://" + externalIP() + ":" + String(port) + "/msg?code=" + selCode.data + ":" + String(selCode.encoding) + ":" + String(selCode.bits) + "</pre></li></ul>\n");
+  // server->sendContent("            <li>External IP <span class='label label-default'>MSG</span></li>\n");
+  // server->sendContent("            <li><pre>http://" + externalIP() + ":" + String(port) + "/msg?code=" + selCode.data + ":" + String(selCode.encoding) + ":" + String(selCode.bits) + "</pre></li></ul>\n");
   server->sendContent("          <ul class='list-unstyled'>\n");
   server->sendContent("            <li>Hostname <span class='label label-default'>JSON</span></li>\n");
   server->sendContent("            <li><pre>http://" + String(host_name) + ".local:" + String(port) + "/json?plain=[{'data':'" + String(selCode.data) + "','type':'" + String(selCode.encoding) + "','length':" + String(selCode.bits) + "}]</pre></li>\n");
   server->sendContent("            <li>Local IP <span class='label label-default'>JSON</span></li>\n");
   server->sendContent("            <li><pre>http://" + WiFi.localIP().toString() + ":" + String(port) + "/json?plain=[{'data':'" + String(selCode.data) + "','type':'" + String(selCode.encoding) + "','length':" + String(selCode.bits) + "}]</pre></li>\n");
-  server->sendContent("            <li>External IP <span class='label label-default'>JSON</span></li>\n");
-  server->sendContent("            <li><pre>http://" + externalIP() + ":" + String(port) + "/json?plain=[{'data':'" + String(selCode.data) + "','type':'" + String(selCode.encoding) + "','length':" + String(selCode.bits) + "}]</pre></li></ul>\n");
+  // server->sendContent("            <li>External IP <span class='label label-default'>JSON</span></li>\n");
+  // server->sendContent("            <li><pre>http://" + externalIP() + ":" + String(port) + "/json?plain=[{'data':'" + String(selCode.data) + "','type':'" + String(selCode.encoding) + "','length':" + String(selCode.bits) + "}]</pre></li></ul>\n");
   }
   server->sendContent("        </div>\n");
   server->sendContent("     </div>\n");
@@ -1554,5 +1402,5 @@ void loop() {
     digitalWrite(ledpin, LOW);                                    // Turn on the LED for 0.5 seconds
     ticker.attach(0.5, disableLed);
   }
-  delay(200);
+  delay(200);                                                     // PJR - why?
 }
